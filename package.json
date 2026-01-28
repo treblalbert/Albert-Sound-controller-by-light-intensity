@@ -20,12 +20,19 @@
   "build": {
     "appId": "com.albert.webcam-volume-widget",
     "productName": "Webcam Volume Widget",
+    "directories": {
+      "output": "dist"
+    },
     "win": {
       "target": "portable",
-      "icon": "icon.ico"
+      "icon": "assets/icon.ico"
     },
     "portable": {
       "artifactName": "WebcamVolumeWidget.exe"
-    }
+    },
+    "files": [
+      "**/*",
+      "!assets/*"
+    ]
   }
 }

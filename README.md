@@ -1,43 +1,36 @@
-# Webcam Volume Widget
+# Albert Sound Controller (Light Intensity Edition)
 
-A minimal Windows widget that controls system volume based on webcam brightness.
+I’ve been seeing a bunch of reels, Shorts, TikToks, whatever, showcasing sound controllers from that old Reddit “contest” from like 10 years ago. The whole goal was to create the worst sound controller possible.
 
-## Run in Development
+Even though I’m about a decade late, I decided to make my own.
 
-```bash
-npm install
-npm start
-```
+This one is **light-intensity-based**.
 
-## Build Portable EXE
+It uses the light intensity detected by your webcam to control how loud the sound is:
+- More light = louder sound  
+- Pitch black = zero volume  
 
-### Step 1: Create your icon
+Simple. Dumb. Beautiful.
 
-An SVG template is provided in `assets/icon.svg`. Convert it to `.ico`:
+## Update: Rewritten in Python
 
-**Option A: Online converter (easiest)**
-1. Go to https://convertio.co/svg-ico/ or https://cloudconvert.com/svg-to-ico
-2. Upload `assets/icon.svg`
-3. Download the `.ico` file
-4. Save it as `assets/icon.ico`
+I updated the Albert Sound Controller to be written in **Python** instead of Electron, because Electron fucking sucks.
 
-**Option B: Use your own icon**
-1. Create or find a 256x256 PNG image
-2. Convert to `.ico` using https://icoconvert.com/
-3. Save as `assets/icon.ico`
+It makes the app:
+- Not truly portable  
+- Over **500 MB** for absolutely no good reason  
 
-### Step 2: Build
+Okay, there *is* a reason: Electron basically ships a whole Chrome browser with every app since it’s HTML and JavaScript based. Still, that’s insane.
 
-```bash
-npm install
-npm run build
-```
+So now it’s Python:
+- A bit uglier  
+- Actually portable  
+- Barely weighs anything  
 
-The portable `WebcamVolumeWidget.exe` will be in the `dist` folder with your custom icon.
+A trade-off I’ll gladly take.
 
-## Usage
+## Running It
 
-- Drag the widget anywhere on screen
-- Lighter webcam image = Higher volume
-- Darker webcam image = Lower volume
-- Click ✕ to close
+You can just run the already-built **EXE** to test it.
+
+I don’t know why you would do that, but hey, it’s there.

@@ -1,0 +1,6 @@
+opencv-python==4.9.0.80
+numpy==1.26.4
+comtypes==1.2.1
+pycaw==20230407
+Pillow==10.2.0
+pyinstaller==6.3.0

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volume Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            overflow: hidden;
+            background: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-app-region: drag;
+            user-select: none;
+        }
+
+        .widget {
+            display: flex;
+            align-items: stretch;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            height: 160px;
+            width: 280px;
+        }
+
+        .webcam-container {
+            flex: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+        }
+
+        #webcam {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            display: block;
+        }
+
+        .volume-container {
+            width: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            -webkit-app-region: no-drag;
+        }
+
+        .volume-bar-wrapper {
+            flex: 1;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .volume-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #007aff;
+            border-radius: 8px;
+            transition: height 0.1s ease-out;
+        }
+
+        .volume-text {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-align: center;
+        }
+
+        .close-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.06);
+            color: #86868b;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            -webkit-app-region: no-drag;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 59, 48, 0.15);
+            color: #ff3b30;
+        }
+
+        #canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget">
+        <div class="webcam-container">
+            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="canvas"></canvas>
+        </div>
+        
+        <div class="volume-container">
+            <button class="close-btn" id="close-btn">✕</button>
+            <div class="volume-bar-wrapper">
+                <div class="volume-bar" id="volume-bar"></div>
+            </div>
+            <div class="volume-text" id="volume-text">0%</div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const volumeBar = document.getElementById('volume-bar');
+        const volumeText = document.getElementById('volume-text');
+        const closeBtn = document.getElementById('close-btn');
+
+        let currentVolume = 50;
+        const smoothing = 0.15;
+        const MIN_BRIGHTNESS = 30;
+        const MAX_BRIGHTNESS = 200;
+
+        async function initWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: { ideal: 320 }, height: { ideal: 240 } } 
+                });
+                video.srcObject = stream;
+                await video.play();
+                
+                canvas.width = video.videoWidth || 320;
+                canvas.height = video.videoHeight || 240;
+                
+                currentVolume = await window.volumeAPI.getVolume();
+                updateVolumeDisplay(currentVolume);
+                
+                // Auto-start immediately
+                controlLoop();
+            } catch (err) {
+                console.error('Webcam error:', err);
+            }
+        }
+
+        function calculateBrightness() {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            let totalBrightness = 0;
+            const pixelCount = data.length / 4;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                totalBrightness += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+            }
+            
+            return totalBrightness / pixelCount;
+        }
+
+        function brightnessToVolume(brightness) {
+            const clamped = Math.max(MIN_BRIGHTNESS, Math.min(MAX_BRIGHTNESS, brightness));
+            return ((clamped - MIN_BRIGHTNESS) / (MAX_BRIGHTNESS - MIN_BRIGHTNESS)) * 100;
+        }
+
+        function updateVolumeDisplay(volume) {
+            const rounded = Math.round(volume);
+            volumeBar.style.height = rounded + '%';
+            volumeText.textContent = rounded + '%';
+        }
+
+        async function controlLoop() {
+            const brightness = calculateBrightness();
+            const targetVolume = brightnessToVolume(brightness);
+            
+            currentVolume = currentVolume + smoothing * (targetVolume - currentVolume);
+            
+            updateVolumeDisplay(currentVolume);
+            await window.volumeAPI.setVolume(currentVolume);
+            
+            requestAnimationFrame(controlLoop);
+        }
+
+        closeBtn.addEventListener('click', () => {
+            window.volumeAPI.closeApp();
+        });
+
+        initWebcam();
+    </script>
+</body>
+</html>
